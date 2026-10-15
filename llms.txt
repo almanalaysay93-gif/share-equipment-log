@@ -1,0 +1,13 @@
+# SHARE Equipment Borrowing Log
+
+> Sign-out and sign-in page for equipment of the SHARE unit (Human Advocate and Retrieval Effort), Southern Philippines Medical Center, Davao City, Philippines.
+
+A borrower enters a name, an email, a department, and a contact number, picks the items, and sets a return date.
+To return, the borrower enters the same email and selects the items.
+Past the return date, the unit sends a reminder email every day at 8:00 AM Manila time until the items come back.
+Contact: share@spmcdvo.net.
+
+## Page
+
+- [Borrow equipment](https://almanalaysay93-gif.github.io/share-equipment-log/#borrow): sign items out of the SHARE unit.
+- [Return equipment](https://almanalaysay93-gif.github.io/share-equipment-log/#return): sign borrowed items back in.

@@ -1,0 +1,30 @@
+:root {
+  --bg: #05070d;
+  --bg-2: #0a0f1c;
+  --panel: rgba(9, 14, 28, 0.82);
+  --panel-solid: #0b1220;
+  --line: rgba(0, 240, 255, 0.22);
+  --text: #e8f6ff;
+  --muted: #a3b6cc;
+  --cyan: #00f0ff;
+  --cyan-dim: rgba(0, 240, 255, 0.14);
+  --mag: #ff2bd6;
+  --mag-dim: rgba(255, 43, 214, 0.14);
+  --green: #3ddc84;
+  --warn: #ffb547;
+  --error: #ff6b8a;
+  --on-cyan: #021016;
+
+  --font-display: 'Orbitron', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --max: 1120px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 140ms;
+  --t-med: 260ms;
+}

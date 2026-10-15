@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1280, height=720" />
+    <title>SHARE equipment log background loop</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1280px; height: 720px; overflow: hidden; background: #04060c; }
+      #root, #scene, #stage { position: absolute; inset: 0; width: 1280px; height: 720px; overflow: hidden; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1280" data-height="720">
+      <div id="scene" class="clip" data-start="0" data-duration="12" data-track-index="0">
+        <canvas id="stage" width="1280" height="720"></canvas>
+      </div>
+    </div>
+    <script>
+      // Night grid city for the SHARE equipment log page. Decorative background only.
+      // Every motion is a whole number of cycles per loop, so the last frame meets the first.
+      const TAU = Math.PI * 2;
+      const root = document.getElementById("root");
+      const W = +root.dataset.width;
+      const H = +root.dataset.height;
+      const PORTRAIT = H > W;
+      const HZ = H * (PORTRAIT ? 0.6 : 0.56); // horizon line
+      const ctx = document.getElementById("stage").getContext("2d");
+      const state = { p: 0 };
+
+      // Small seeded random, so every render draws the same city.
+      let seed = 7;
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+      const buildings = [];
+      for (let x = -20; x < W + 20; ) {
+        const w = 22 + rnd() * 54;
+        const h = (PORTRAIT ? 60 : 30) + Math.pow(rnd(), 1.6) * (PORTRAIT ? 300 : 190);
+        const wins = [];
+        for (let wy = 8; wy < h - 6; wy += 11) {
+          for (let wx = 5; wx < w - 6; wx += 9) {
+            if (rnd() < 0.32) wins.push({ x: wx, y: wy, f: 1 + Math.floor(rnd() * 3), ph: rnd() * TAU, c: rnd() < 0.7 ? "0,240,255" : "255,43,214" });
+          }
+        }
+        buildings.push({ x, w, h, wins, edge: rnd() < 0.5 ? "0,240,255" : "255,43,214" });
+        x += w + 2 + rnd() * 10;
+      }
+
+      const GLYPHS = "0123456789ABCDEF<>/=+#";
+      const cols = [];
+      const COLW = 18;
+      for (let c = 0; c < Math.ceil(W / COLW); c++) {
+        if (rnd() < 0.45) continue;
+        cols.push({ x: c * COLW + 4, f: 1 + Math.floor(rnd() * 2), ph: rnd(), len: 6 + Math.floor(rnd() * 12), a: 0.12 + rnd() * 0.22, m: rnd() < 0.8 ? "0,240,255" : "61,220,132" });
+      }
+
+      function sky(p) {
+        const g = ctx.createLinearGradient(0, 0, 0, HZ);
+        g.addColorStop(0, "#03050b");
+        g.addColorStop(0.7, "#0a0c22");
+        g.addColorStop(1, "#1a0b2e");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, HZ);
+        // Horizon glow breathes once per loop.
+        const b = 0.85 + 0.15 * Math.sin(TAU * p);
+        const r = ctx.createRadialGradient(W / 2, HZ, 0, W / 2, HZ, Math.max(W, H) * 0.62);
+        r.addColorStop(0, `rgba(255,43,214,${0.42 * b})`);
+        r.addColorStop(0.35, `rgba(120,40,200,${0.2 * b})`);
+        r.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = r;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      function rain(p) {
+        ctx.font = "13px Consolas, monospace";
+        ctx.textBaseline = "top";
+        const tick = Math.floor(p * 48);
+        cols.forEach((c, ci) => {
+          const span = HZ + c.len * 15;
+          const head = ((p * c.f + c.ph) % 1) * span - c.len * 15;
+          for (let k = 0; k < c.len; k++) {
+            const y = head + k * 15;
+            if (y < -15 || y > HZ - 10) continue;
+            const t = (k + 1) / c.len;
+            const ch = GLYPHS[(ci * 31 + k * 7 + (k % 3 === 0 ? tick : 0)) % GLYPHS.length];
+            const fade = Math.min(1, (HZ - y) / 120);
+            ctx.fillStyle = k === c.len - 1 ? `rgba(220,255,255,${0.55 * fade})` : `rgba(${c.m},${c.a * t * fade})`;
+            ctx.fillText(ch, c.x, y);
+          }
+        });
+      }
+
+      function city(p) {
+        buildings.forEach((b) => {
+          const top = HZ - b.h;
+          ctx.fillStyle = "#060914";
+          ctx.fillRect(b.x, top, b.w, b.h);
+          ctx.fillStyle = `rgba(${b.edge},0.55)`;
+          ctx.fillRect(b.x, top, b.w, 1.5);
+          b.wins.forEach((w) => {
+            const on = Math.sin(TAU * w.f * p + w.ph);
+            if (on < -0.2) return;
+            ctx.fillStyle = `rgba(${w.c},${0.25 + 0.45 * Math.max(0, on)})`;
+            ctx.fillRect(b.x + w.x, top + w.y, 4, 3);
+          });
+        });
+      }
+
+      function floor(p) {
+        const g = ctx.createLinearGradient(0, HZ, 0, H);
+        g.addColorStop(0, "#12061f");
+        g.addColorStop(1, "#02030a");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, HZ, W, H - HZ);
+        const f = H * 0.5;
+        const zNear = f / (H - HZ);
+        // Cross lines move toward the viewer: 3 line spacings per loop.
+        const N = 36;
+        ctx.lineWidth = 1.2;
+        for (let k = 0; k < N; k++) {
+          const z = zNear + ((((k - p * 3) % N) + N) % N) * 0.9;
+          const y = HZ + f / z;
+          const a = Math.max(0, 0.75 - z / (N * 0.9)) * 0.9;
+          ctx.strokeStyle = `rgba(0,240,255,${a})`;
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+        // Rails to the vanishing point.
+        for (let i = -26; i <= 26; i++) {
+          const xn = W / 2 + (f * i * 0.9) / zNear;
+          const a = 0.5 - Math.min(0.4, Math.abs(i) / 60);
+          const lg = ctx.createLinearGradient(0, H, 0, HZ);
+          lg.addColorStop(0, `rgba(255,43,214,${a})`);
+          lg.addColorStop(1, "rgba(255,43,214,0)");
+          ctx.strokeStyle = lg;
+          ctx.beginPath(); ctx.moveTo(xn, H); ctx.lineTo(W / 2, HZ); ctx.stroke();
+        }
+        // Horizon line.
+        ctx.fillStyle = "rgba(255,120,240,0.7)";
+        ctx.fillRect(0, HZ - 1, W, 2);
+      }
+
+      function scan(p) {
+        // One soft beam crosses the frame per loop and wraps.
+        const y = ((p + 0.3) % 1) * (H + 200) - 100;
+        const g = ctx.createLinearGradient(0, y - 100, 0, y + 100);
+        g.addColorStop(0, "rgba(0,240,255,0)");
+        g.addColorStop(0.5, "rgba(0,240,255,0.06)");
+        g.addColorStop(1, "rgba(0,240,255,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, y - 100, W, 200);
+        // Fixed scanlines and vignette.
+        ctx.fillStyle = "rgba(0,0,0,0.18)";
+        for (let s = 0; s < H; s += 3) ctx.fillRect(0, s, W, 1);
+        const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+        v.addColorStop(0, "rgba(0,0,0,0)");
+        v.addColorStop(1, "rgba(0,0,0,0.65)");
+        ctx.fillStyle = v;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      function draw() {
+        const p = state.p % 1;
+        ctx.globalAlpha = 1;
+        sky(p);
+        rain(p);
+        city(p);
+        floor(p);
+        scan(p);
+      }
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(state, { p: 0 }, { p: 1, duration: 12, ease: "none", onUpdate: draw }, 0);
+      draw();
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

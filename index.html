@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SHARE Equipment Borrowing Log</title>
+    <meta name="description" content="Sign out and sign in equipment of the SHARE unit, Southern Philippines Medical Center, Davao City. Every item that leaves the unit is on record." />
+    <meta name="theme-color" content="#05070d" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/main.css" />
+    <script>document.documentElement.classList.add('js');</script>
+  </head>
+  <body>
+    <a class="skip" href="#borrow">Skip to the borrow form</a>
+
+    <div class="backdrop" aria-hidden="true">
+      <canvas class="grid-canvas"></canvas>
+      <div class="backdrop__shade"></div>
+    </div>
+
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="SHARE Equipment Borrowing Log, top of page">
+        <img src="assets/share-192.webp" width="40" height="40" alt="" />
+        <span class="brand__name">SHARE</span>
+        <span class="brand__sub">Equipment Log</span>
+      </a>
+      <nav class="topnav" aria-label="Sections">
+        <a href="#borrow">Borrow</a>
+        <a href="#return">Return</a>
+      </nav>
+      <div class="partners">
+        <img src="assets/spmc-256.webp" width="36" height="48" alt="Southern Philippines Medical Center" />
+        <img src="assets/skti-256.webp" width="40" height="40" alt="SPMC Kidney and Transplant Institute" />
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="stage" data-stage>
+          <div class="layer layer--rings" data-depth="-120" aria-hidden="true">
+            <div class="ring ring--a"></div>
+            <div class="ring ring--b"></div>
+            <div class="ring ring--c"></div>
+          </div>
+          <div class="layer layer--logo" data-depth="60">
+            <div class="holo">
+              <img src="assets/share-512.webp" width="512" height="512" alt="SHARE, Human Advocate and Retrieval Effort, Southern Philippines Medical Center" />
+              <span class="holo__scan" aria-hidden="true"></span>
+            </div>
+          </div>
+          <div class="layer layer--copy" data-depth="140">
+            <p class="kicker"><span class="dot" aria-hidden="true"></span>SHARE unit · SPMC Davao City</p>
+            <h1 id="hero-title" class="glitch" data-text="Equipment Borrowing Log">Equipment Borrowing Log</h1>
+            <p class="lede">Sign equipment out. Sign it back in. Every item that leaves the SHARE unit is on record, with a name and a return date.</p>
+            <div class="cta">
+              <a class="btn btn--cyan" href="#borrow">Borrow equipment</a>
+              <a class="btn btn--ghost" href="#return">Return equipment</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="status" role="status" aria-live="polite">
+          <div class="status__cell"><span class="status__num" data-stat="available">--</span><span class="status__label">available</span></div>
+          <div class="status__cell"><span class="status__num status__num--mag" data-stat="out">--</span><span class="status__label">out now</span></div>
+          <div class="status__cell"><span class="status__num status__num--sm" data-stat="today">--</span><span class="status__label">today, Manila</span></div>
+        </div>
+        <p class="demo-note" data-demo hidden>Demo mode. Records stay in this browser only.</p>
+      </section>
+
+      <section class="panel panel--cyan reveal" id="borrow" aria-labelledby="borrow-title">
+        <header class="panel__head">
+          <p class="panel__tag">01 / Sign out</p>
+          <h2 id="borrow-title">Borrow equipment</h2>
+          <p class="panel__hint">Fill in your details, pick the items, and set the date you will bring them back.</p>
+        </header>
+
+        <form class="form" id="borrow-form" novalidate>
+          <div class="grid2">
+            <div class="field">
+              <label for="b-name">Full name</label>
+              <input id="b-name" name="name" autocomplete="name" required minlength="2" maxlength="80" />
+            </div>
+            <div class="field">
+              <label for="b-email">Email</label>
+              <input id="b-email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="120" />
+            </div>
+            <div class="field">
+              <label for="b-dept">Department or unit</label>
+              <input id="b-dept" name="department" list="dept-list" autocomplete="organization" required minlength="2" maxlength="80" />
+              <datalist id="dept-list">
+                <option value="SHARE"></option>
+                <option value="Kidney and Transplant Institute"></option>
+                <option value="Hemodialysis Unit"></option>
+                <option value="Transplant OPD"></option>
+                <option value="Nursing Service"></option>
+              </datalist>
+            </div>
+            <div class="field">
+              <label for="b-contact">Contact number</label>
+              <input id="b-contact" name="contact" type="tel" autocomplete="tel" inputmode="tel" required maxlength="20" placeholder="0917 123 4567" />
+            </div>
+          </div>
+
+          <fieldset class="picker">
+            <legend>Equipment <span class="picker__count" data-picked>0 selected</span></legend>
+            <div class="field field--search">
+              <label for="b-search" class="sr-only">Search equipment</label>
+              <input id="b-search" type="search" placeholder="Search equipment" autocomplete="off" />
+            </div>
+            <div class="picker__list" data-items aria-busy="true">
+              <p class="muted">Loading the equipment list...</p>
+            </div>
+          </fieldset>
+
+          <div class="grid2">
+            <div class="field">
+              <label for="b-due">Return date</label>
+              <input id="b-due" name="dueDate" type="date" required />
+              <p class="field__help">Up to 90 days from today.</p>
+            </div>
+            <div class="confirm-email" aria-live="polite">
+              <span class="confirm-email__label">Reminders go to</span>
+              <span class="confirm-email__value" data-email-echo>your email</span>
+              <span class="field__help">Check this. A wrong email gets no reminder.</span>
+            </div>
+          </div>
+
+          <p class="form__error" data-error role="alert"></p>
+          <button class="btn btn--cyan btn--wide" type="submit">Sign out equipment</button>
+        </form>
+
+        <div class="result" data-borrow-result hidden tabindex="-1"></div>
+      </section>
+
+      <section class="panel panel--mag reveal" id="return" aria-labelledby="return-title">
+        <header class="panel__head">
+          <p class="panel__tag">02 / Sign in</p>
+          <h2 id="return-title">Return equipment</h2>
+          <p class="panel__hint">Enter the email you used to borrow. Your open items show below.</p>
+        </header>
+
+        <form class="form form--inline" id="lookup-form" novalidate>
+          <div class="field">
+            <label for="r-email">Email</label>
+            <input id="r-email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="120" />
+          </div>
+          <button class="btn btn--mag" type="submit">Find my items</button>
+        </form>
+        <p class="form__error" data-lookup-error role="alert"></p>
+
+        <form class="form" id="return-form" hidden novalidate>
+          <fieldset class="loans">
+            <legend>Items you still have</legend>
+            <div data-loans></div>
+          </fieldset>
+          <fieldset class="condition">
+            <legend>Condition</legend>
+            <label class="chip"><input type="radio" name="condition" value="Good" checked /> Good</label>
+            <label class="chip"><input type="radio" name="condition" value="Damaged" /> Damaged</label>
+            <label class="chip"><input type="radio" name="condition" value="Missing parts" /> Missing parts</label>
+          </fieldset>
+          <div class="field">
+            <label for="r-note">Note (optional)</label>
+            <textarea id="r-note" name="note" rows="2" maxlength="300" placeholder="For example: charger returned separately"></textarea>
+          </div>
+          <p class="form__error" data-return-error role="alert"></p>
+          <button class="btn btn--mag btn--wide" type="submit">Sign in returned items</button>
+        </form>
+
+        <div class="result" data-return-result hidden tabindex="-1"></div>
+      </section>
+
+      <section class="how reveal" aria-labelledby="how-title">
+        <h2 id="how-title">How it works</h2>
+        <ol class="steps">
+          <li><span class="steps__n">1</span><h3>Sign out</h3><p>Enter your name, email, department, and contact number. Pick the items and a return date.</p></li>
+          <li><span class="steps__n">2</span><h3>Use</h3><p>An item you hold shows as out. Nobody else can sign it out until it comes back.</p></li>
+          <li><span class="steps__n">3</span><h3>Sign in</h3><p>Bring the item to the SHARE office and sign it in with the same email.</p></li>
+        </ol>
+        <p class="how__note">Past the return date, a reminder goes to your email at 8:00 AM every day until you sign the item in. It comes from <a href="mailto:share@spmcdvo.net">share@spmcdvo.net</a>.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__logos">
+        <img src="assets/share-192.webp" width="48" height="48" alt="SHARE" />
+        <img src="assets/spmc-256.webp" width="40" height="53" alt="Southern Philippines Medical Center" />
+        <img src="assets/skti-256.webp" width="48" height="48" alt="SPMC Kidney and Transplant Institute" />
+      </div>
+      <p>SHARE: Human Advocate and Retrieval Effort · Southern Philippines Medical Center, Davao City</p>
+      <p>Questions: <a href="mailto:share@spmcdvo.net">share@spmcdvo.net</a></p>
+    </footer>
+
+    <script type="module" src="js/bg.js"></script>
+    <script type="module" src="js/stage.js"></script>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
