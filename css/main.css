@@ -212,6 +212,12 @@ input[type='date'] { color-scheme: dark; }
 fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 legend { padding: 0; margin-bottom: 10px; display: flex; gap: 10px; align-items: baseline; }
 .picker__count { font-weight: 500; color: var(--cyan); font-size: 13px; }
+.picker__sync { font-weight: 500; color: var(--muted); font-size: 13px; }
+.btn .spin {
+  width: 16px; height: 16px; flex: none; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
 .field--search { margin-bottom: 10px; }
 .picker__list {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px;

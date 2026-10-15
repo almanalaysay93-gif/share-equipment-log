@@ -1,4 +1,5 @@
 import { DEMO, catalog, send, manilaToday } from './api.js';
+import { ENDPOINT } from './config.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -30,10 +31,11 @@ const prettyDate = (iso) => {
   return new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-PH', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+// The Apps Script backend takes 2 to 4 seconds per request, so a busy button shows a spinner and a message.
 function busy(btn, on, label) {
   if (on) {
     btn.dataset.label = btn.textContent;
-    btn.textContent = label;
+    btn.replaceChildren(el('span', { class: 'spin', 'aria-hidden': 'true' }), label);
     btn.disabled = true;
     btn.setAttribute('aria-busy', 'true');
   } else {
@@ -102,21 +104,57 @@ function updatePicked() {
   $('[data-picked]').textContent = `${n} selected`;
 }
 
-async function loadCatalog() {
-  const res = await catalog();
-  if (!res.ok) {
-    $('[data-items]').replaceChildren(el('p', { class: 'form__error', text: res.message }),
-      el('button', { class: 'btn btn--ghost', type: 'button', 'data-retry': true, text: 'Try again' }));
-    $('[data-retry]').addEventListener('click', loadCatalog);
-    return;
+// The last equipment list is kept in this browser, so a return visit shows it at once.
+// The server list replaces it when it arrives. The server still checks availability on every borrow.
+const CACHE_KEY = `share-eq-catalog:${ENDPOINT || 'demo'}`;
+let fromCache = false;
+
+function readCache() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY));
+    return c && Array.isArray(c.items) ? c : null;
+  } catch {
+    return null;
   }
-  items = res.items;
-  today = res.today || today;
+}
+function writeCache(list) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ items: list }));
+  } catch { /* Private mode or full storage: the page works without the cache. */ }
+}
+
+function applyCatalog(list, serverToday) {
+  // Re-rendering the list must not drop keyboard focus from a checkbox.
+  const focused = document.activeElement?.closest?.('[data-items]') ? document.activeElement.value : null;
+  items = list;
+  today = serverToday || manilaToday();
   const due = $('#b-due');
   due.min = today;
   due.max = addDays(today, MAX_DAYS);
   renderStatus();
   renderItems();
+  if (focused) $(`[data-items] input[value="${CSS.escape(focused)}"]`)?.focus();
+}
+
+async function loadCatalog() {
+  const note = $('[data-sync]');
+  if (fromCache) note.hidden = false;
+  const res = await catalog();
+  note.hidden = true;
+  if (!res.ok) {
+    if (fromCache) {
+      note.textContent = 'Showing the saved list. The live list could not load.';
+      note.hidden = false;
+      return;
+    }
+    $('[data-items]').replaceChildren(el('p', { class: 'form__error', text: res.message }),
+      el('button', { class: 'btn btn--ghost', type: 'button', 'data-retry': true, text: 'Try again' }));
+    $('[data-retry]').addEventListener('click', loadCatalog);
+    return;
+  }
+  fromCache = false;
+  writeCache(res.items);
+  applyCatalog(res.items, res.today);
 }
 
 // ---- Borrow ----------------------------------------------------------------
@@ -167,7 +205,7 @@ bForm.addEventListener('submit', async (e) => {
   };
   if (!validateBorrow(data)) return;
   const btn = $('button[type="submit"]', bForm);
-  busy(btn, true, 'Saving...');
+  busy(btn, true, 'Saving to the log...');
   const res = await send('borrow', data);
   busy(btn, false);
 
@@ -225,7 +263,7 @@ lForm.addEventListener('submit', async (e) => {
     return;
   }
   const btn = $('button', lForm);
-  busy(btn, true, 'Searching...');
+  busy(btn, true, 'Searching the log...');
   const res = await send('lookup', { email });
   busy(btn, false);
   if (!res.ok) {
@@ -256,7 +294,7 @@ rForm.addEventListener('submit', async (e) => {
   }
   rError.textContent = '';
   const btn = $('button[type="submit"]', rForm);
-  busy(btn, true, 'Saving...');
+  busy(btn, true, 'Saving to the log...');
   const res = await send('return', { email: lookupEmail, loanIds, condition: f.get('condition'), note: String(f.get('note') || '').trim() });
   busy(btn, false);
   if (!res.ok) {
@@ -279,6 +317,11 @@ rForm.addEventListener('submit', async (e) => {
 
 // ---- Start -----------------------------------------------------------------
 if (DEMO) $('[data-demo]').hidden = false;
+const cached = readCache();
+if (cached) {
+  fromCache = true;
+  applyCatalog(cached.items);
+}
 loadCatalog();
 
 // Reveal panels as they enter the view. Without the observer, CSS keeps them visible.
